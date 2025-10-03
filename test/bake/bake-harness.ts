@@ -2044,7 +2044,7 @@ devTest.only = function (description: string, options: DevServerTest) {
   return testImpl(description, { ...options, only: true }, "development", caller);
 };
 
-export function prodTest<T extends DevServerTest>(description: string, options: T): T {
+export function prodTest(description: string, options: DevServerTest) {
   const callerLocation = snapshotCallerLocation();
   const caller = stackTraceFileName(callerLocation);
   assert(
