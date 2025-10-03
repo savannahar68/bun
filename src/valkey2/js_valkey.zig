@@ -459,9 +459,12 @@ const MethodFactory = struct {
     }
 };
 
-const bun = @import("bun");
-const ValkeyClient = @import("./valkey.zig").ValkeyClient;
 // TODO(markovejnovic): This should be imported from the same location as ValkeyClient.
-const protocol = @import("./valkey.zig").protocol;
+
+const bun = @import("bun");
+
 const Command = @import("./command.zig").Command;
 const CommandDescriptor = @import("./command.zig").CommandDescriptor;
+
+const ValkeyClient = @import("./valkey.zig").ValkeyClient;
+const protocol = @import("./valkey.zig").protocol;

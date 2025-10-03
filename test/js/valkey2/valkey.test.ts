@@ -1,15 +1,15 @@
-import { beforeAll, beforeEach, describe, expect, test, it, afterEach } from "bun:test";
-import {describeValkey, ValkeyContext, Url, ValkeyFaker} from "./test-utils";
-import {RedisClient2} from "bun";
-import * as random from "_util/random";
 import * as algo from "_util/algo";
+import * as random from "_util/random";
+import { RedisClient2 } from "bun";
+import { afterEach, describe, expect, it, test } from "bun:test";
+import { describeValkey, Url, ValkeyContext, ValkeyFaker } from "./test-utils";
 
 const randomEngine = random.mulberry32Prng(random.currentMonthSeed());
 
 // No need for describeValkey since we don't need a running Valkey server for these tests. No connection will be
 // established.
 describe("disconnected client", () => {
-  it.each(Url.generateValidSet(32, randomEngine))("should construct with URL %s", (url) => {
+  it.each(Url.generateValidSet(32, randomEngine))("should construct with URL %s", url => {
     const client = new RedisClient2(url);
     expect(client).toBeInstanceOf(RedisClient2);
   });
@@ -44,34 +44,36 @@ describe("disconnected client", () => {
   });
 });
 
-describeValkey("valkey", (ctx: ValkeyContext) => {
-  console.log("Using Bun version:", process.versions.bun);
-  it("successfully connects", async () => {
-    console.log("Connecting to Valkey server at", ctx.serverUrl);
-    await ctx.client().connect();
-  });
-
-  describe("runs trivial commands", async () => {
-
-    describe("supports", () => {
-      it("PING", async () => {
-        expect(await (await ctx.connectedClient()).ping()).toBe("PONG");
-      });
-
-      it("RANDOMKEY", async () => {
-        expect(await (await ctx.connectedClient()).randomkey()).toBe(null);
-      });
+describeValkey(
+  "valkey",
+  (ctx: ValkeyContext) => {
+    console.log("Using Bun version:", process.versions.bun);
+    it("successfully connects", async () => {
+      console.log("Connecting to Valkey server at", ctx.serverUrl);
+      await ctx.client().connect();
     });
 
+    describe("runs trivial commands", async () => {
+      describe("supports", () => {
+        it("PING", async () => {
+          expect(await (await ctx.connectedClient()).ping()).toBe("PONG");
+        });
 
-    it.each(algo.zip(
-      ValkeyFaker.edgeCaseKeys(randomEngine, 16),
-      ValkeyFaker.edgeCaseValues(randomEngine, 16),
-    ))("roundtrip get/set/get %s->%s", async (key, value) => {
-      const client = await ctx.connectedClient();
-      expect(await client.get(key)).toBe(null);
-      expect(await client.set(key, value)).toBe("OK");
-      expect(await client.get(key)).toBe(value);
+        it("RANDOMKEY", async () => {
+          expect(await (await ctx.connectedClient()).randomkey()).toBe(null);
+        });
+      });
+
+      it.each(algo.zip(ValkeyFaker.edgeCaseKeys(randomEngine, 16), ValkeyFaker.edgeCaseValues(randomEngine, 16)))(
+        "roundtrip get/set/get %s->%s",
+        async (key, value) => {
+          const client = await ctx.connectedClient();
+          expect(await client.get(key)).toBe(null);
+          expect(await client.set(key, value)).toBe("OK");
+          expect(await client.get(key)).toBe(value);
+        },
+      );
     });
-  });
-}, { server: "redis://localhost:6379" });
+  },
+  { server: "redis://localhost:6379" },
+);
